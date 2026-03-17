@@ -1,65 +1,86 @@
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 
+const description = document.getElementById("description");
+const amount = document.getElementById("amount");
+const category = document.getElementById("category");
+const addBtn = document.getElementById("addBtn");
+const expenseList = document.getElementById("expenseList");
+const total = document.getElementById("total");
+const filterCategory = document.getElementById("filterCategory");
+
+addBtn.addEventListener("click", addExpense);
+
 function saveExpenses(){
 localStorage.setItem("expenses", JSON.stringify(expenses));
 }
 
 function addExpense(){
 
-let description = document.getElementById("description").value;
-let amount = document.getElementById("amount").value;
-let category = document.getElementById("category").value;
-
-if(description === "" || amount === "" || category === ""){
+if(description.value === "" || amount.value === "" || category.value === ""){
 alert("Please fill all fields");
 return;
 }
 
-let expense = {
+const expense = {
 id: Date.now(),
-description,
-amount: Number(amount),
-category
+description: description.value,
+amount: Number(amount.value),
+category: category.value
 };
 
 expenses.push(expense);
 
 saveExpenses();
 
+animateButton();
+
 displayExpenses();
 
 updateCategories();
 
-clearInputs();
+description.value="";
+amount.value="";
+category.value="";
 }
 
-function clearInputs(){
-document.getElementById("description").value="";
-document.getElementById("amount").value="";
-document.getElementById("category").value="";
+function animateButton(){
+
+addBtn.textContent="Added ✔";
+addBtn.classList.add("bg-green-500");
+
+setTimeout(()=>{
+addBtn.textContent="➕ Add Expense";
+addBtn.classList.remove("bg-green-500");
+},1000);
+
 }
 
 function displayExpenses(list = expenses){
 
-let expenseList = document.getElementById("expenseList");
-
 expenseList.innerHTML="";
 
-list.forEach(expense => {
+list.forEach(expense =>{
 
-let li = document.createElement("li");
+const li=document.createElement("li");
 
-li.className="flex justify-between bg-gray-100 p-2 rounded";
+li.className="flex justify-between items-center bg-gray-100 p-3 rounded-lg shadow-sm hover:shadow-md transition";
 
-li.innerHTML = `
-<span>
-${expense.description} - Ksh ${expense.amount} (${expense.category})
-</span>
+li.innerHTML=`
+<div>
+<p class="font-semibold text-gray-800">${expense.description}</p>
+<p class="text-sm text-gray-500">${expense.category}</p>
+</div>
 
-<button class="bg-red-500 text-white px-2 rounded"
+<div class="flex items-center gap-3">
+
+<span class="font-bold text-blue-600">Ksh ${expense.amount}</span>
+
+<button class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
 onclick="deleteExpense(${expense.id})">
 Delete
 </button>
+
+</div>
 `;
 
 expenseList.appendChild(li);
@@ -79,53 +100,53 @@ saveExpenses();
 displayExpenses();
 
 updateCategories();
+
 }
 
 function calculateTotal(list){
 
-let total = list.reduce((sum, expense)=> sum + expense.amount,0);
+let sum = 0;
 
-document.getElementById("total").textContent = total;
+list.forEach(expense=>{
+sum += expense.amount;
+});
+
+total.textContent=sum;
 
 }
 
 function updateCategories(){
 
-let filter = document.getElementById("filterCategory");
+filterCategory.innerHTML='<option value="all">All Categories</option>';
 
-let categories = [...new Set(expenses.map(exp => exp.category))];
-
-filter.innerHTML = <option value="all">All Categories</option>;
+const categories=[...new Set(expenses.map(e=>e.category))];
 
 categories.forEach(cat=>{
 
-let option = document.createElement("option");
+const option=document.createElement("option");
 
-option.value = cat;
-option.textContent = cat;
+option.value=cat;
+option.textContent=cat;
 
-filter.appendChild(option);
+filterCategory.appendChild(option);
 
 });
 
 }
 
-function filterExpenses(){
+filterCategory.addEventListener("change",()=>{
 
-let selected = document.getElementById("filterCategory").value;
-
-if(selected === "all"){
+if(filterCategory.value==="all"){
 displayExpenses();
 }else{
 
-let filtered = expenses.filter(exp => exp.category === selected);
+const filtered=expenses.filter(e=>e.category===filterCategory.value);
 
 displayExpenses(filtered);
 
 }
 
-}
+});
 
 displayExpenses();
-
 updateCategories();
